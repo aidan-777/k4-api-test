@@ -50,3 +50,22 @@ class TestHealthCheck:
         assert data["components"]["metrics_server"] == "running"
         assert data["components"]["http_server"] == "running"
 
+    def test_general_info(self, public_api_client: PublicAPIClient):
+        """测试通用信息接口"""
+        response = public_api_client.get_general_info()
+        assert response.status_code == 200
+        data = response.json()
+        assert "interest_rate_hourly" in data
+        assert "interest_rate_annual" in data
+        assert "assets" in data
+        assert "BTC" in data["assets"]
+        btc_info = data["assets"]["BTC"]
+        assert "liquidation_threshold" in btc_info
+        assert "price" in btc_info
+
+    def test_metrics_redirect(self, public_api_client: PublicAPIClient):
+        """测试 metrics 重定向"""
+        response = public_api_client.get_metrics()
+        assert response.status_code in (301, 308)
+        assert "Location" in response.headers
+        assert response.headers["Location"].endswith("9091/metrics")

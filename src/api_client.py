@@ -70,38 +70,79 @@ class PublicAPIClient(APIClient):
         """获取系统状态"""
         return self.get("/api/v1/status")
 
-    def quest_loan_amount(self, collateral_assets: Dict[str, str]) -> requests.Response:
+    def get_metrics(self) -> requests.Response:
+        """获取 metrics 重定向"""
+        return self.get("/api/v1/metrics", allow_redirects=False)
+
+    def get_general_info(self) -> requests.Response:
+        """获取利率和抵押品信息"""
+        return self.get("/api/v1/general_info")
+
+    def exchange(self, payload: Dict[str, Any], authorization: Optional[str] = None) -> requests.Response:
+        """发送交易代理请求"""
+        headers = {}
+        if authorization:
+            headers["Authorization"] = authorization
+        return self.post("/api/v1/exchange", json=payload, headers=headers or None)
+
+    def loan_quote(self, payload: Dict[str, Any]) -> requests.Response:
         """获取借款报价"""
-        return self.post("/api/v1/quest_loan_amount", json={"collateral_assets": collateral_assets})
+        return self.post("/api/v1/loan_quote", json=payload)
 
-    def do_loan(self, payload: Dict[str, Any]) -> requests.Response:
+    def do_loan(
+        self,
+        payload: Dict[str, Any],
+        user_id: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> requests.Response:
         """执行借款"""
-        return self.post("/api/v1/do_loan", json=payload)
+        merged_headers = dict(headers) if headers else {}
+        if user_id:
+            merged_headers["X-User-Id"] = user_id
+        return self.post("/api/v1/do_loan", json=payload, headers=merged_headers or None)
 
-    def quest_redeem_amount(self, user_id: str, position_id: str) -> requests.Response:
-        """查询应还本金+利息"""
-        return self.post("/api/v1/quest_redeem_amount", json={
-            "user_id": user_id,
-            "position_id": position_id,
-        })
+    def repay_quote(self, payload: Dict[str, Any]) -> requests.Response:
+        """获取还款报价"""
+        return self.post("/api/v1/repay_quote", json=payload)
 
-    def do_redeem(self, user_id: str, position_id: str) -> requests.Response:
-        """执行赎回"""
-        return self.post("/api/v1/do_redeem", json={
-            "user_id": user_id,
-            "position_id": position_id,
-        })
+    def do_repay(self, payload: Dict[str, Any]) -> requests.Response:
+        """执行还款"""
+        return self.post("/api/v1/do_repay", json=payload)
 
-    def user_close_position(self, user_id: str, position_id: str) -> requests.Response:
-        """用户发起平仓"""
-        return self.post("/api/v1/user_close_position", json={
-            "user_id": user_id,
-            "position_id": position_id,
-        })
+    def account_mode(
+        self,
+        payload: Dict[str, Any],
+        authorization: Optional[str] = None,
+    ) -> requests.Response:
+        """切换账户模式"""
+        headers = {}
+        if authorization:
+            headers["Authorization"] = authorization
+        return self.post("/api/v1/account_mode", json=payload, headers=headers or None)
 
-    def add_margin(self, payload: Dict[str, Any]) -> requests.Response:
-        """增加保证金"""
-        return self.post("/api/v1/add_margin", json=payload)
+    def do_param_update(self, payload: Optional[Dict[str, Any]] = None) -> requests.Response:
+        """参数更新占位接口"""
+        return self.post("/api/v1/do_param_update", json=payload)
+
+    def get_account_by_ids(self, payload: Dict[str, Any]) -> requests.Response:
+        """批量查询账户"""
+        return self.post("/api/v1/get_account_by_ids", json=payload)
+
+    def get_assets_by_ids(self, payload: Dict[str, Any]) -> requests.Response:
+        """批量查询资产"""
+        return self.post("/api/v1/get_assets_by_ids", json=payload)
+
+    def get_accounts(self) -> requests.Response:
+        """查询全部账户"""
+        return self.post("/api/v1/get_accounts")
+
+    def operation_history(self, payload: Dict[str, Any]) -> requests.Response:
+        """查询操作历史"""
+        return self.post("/api/v1/operation_history", json=payload)
+
+    def interest_history(self, payload: Dict[str, Any]) -> requests.Response:
+        """查询利息历史"""
+        return self.post("/api/v1/interest_history", json=payload)
 
 
 class InternalAPIClient(APIClient):
@@ -119,22 +160,9 @@ class InternalAPIClient(APIClient):
         """健康检查 - hc"""
         return self.get("/hc")
 
-    def add_mock_position(
-        self,
-        user_id: str,
-        position_id: str,
-        borrowed_asset: str,
-        borrowed_amount: float,
-        collateral_assets: Dict[str, float],
-    ) -> requests.Response:
-        """添加测试持仓"""
-        return self.post("/api/internal/add_mock_position", json={
-            "user_id": user_id,
-            "position_id": position_id,
-            "borrowed_asset": borrowed_asset,
-            "borrowed_amount": borrowed_amount,
-            "collateral_assets": collateral_assets,
-        })
+    def add_mock_position(self, payload: Dict[str, Any]) -> requests.Response:
+        """添加测试持仓（当前未实现）"""
+        return self.post("/api/internal/add_mock_position", json=payload)
 
     def set_mock_md_price(self, symbol: str, price: float) -> requests.Response:
         """设置模拟行情价格"""
@@ -153,3 +181,14 @@ class InternalAPIClient(APIClient):
         """清除全部模拟价格"""
         return self.post("/api/internal/clear_all_mock_md_prices")
 
+    def set_mock_md_depth(self, payload: Dict[str, Any]) -> requests.Response:
+        """设置模拟深度"""
+        return self.post("/api/internal/mock_md_depth", json=payload)
+
+    def clear_mock_md_depth(self, payload: Dict[str, Any]) -> requests.Response:
+        """清除指定交易对的模拟深度"""
+        return self.post("/api/internal/clear_mock_md_depth", json=payload)
+
+    def clear_all_mock_md_depths(self) -> requests.Response:
+        """清除全部模拟深度"""
+        return self.post("/api/internal/clear_all_mock_md_depths")

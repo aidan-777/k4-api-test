@@ -1,7 +1,10 @@
 """Pytest 配置和 fixtures"""
-import pytest
 import os
-from src.api_client import PublicAPIClient, InternalAPIClient
+import uuid
+
+import pytest
+
+from src.api_client import InternalAPIClient, PublicAPIClient
 
 
 @pytest.fixture(scope="session")
@@ -30,20 +33,38 @@ def test_position_id():
     return "test_pos_456"
 
 
+@pytest.fixture(scope="function")
+def test_address():
+    """默认测试地址"""
+    return "0x0000000000000000000000000000000000000000"
+
+
+@pytest.fixture(scope="function")
+def test_user_uuid():
+    """默认测试用户 UUID"""
+    return str(uuid.uuid4())
+
+
 @pytest.fixture(scope="function", autouse=True)
 def cleanup_mock_data(internal_api_client: InternalAPIClient):
     """测试前后清理 mock 数据"""
     # 测试前清理
-    try:
-        internal_api_client.clear_all_mock_md_prices()
-    except Exception:
-        pass
+    for cleanup in (
+        internal_api_client.clear_all_mock_md_prices,
+        internal_api_client.clear_all_mock_md_depths,
+    ):
+        try:
+            cleanup()
+        except Exception:
+            pass
 
     yield
 
-    # 测试后清理
-    try:
-        internal_api_client.clear_all_mock_md_prices()
-    except Exception:
-        pass
-
+    for cleanup in (
+        internal_api_client.clear_all_mock_md_prices,
+        internal_api_client.clear_all_mock_md_depths,
+    ):
+        try:
+            cleanup()
+        except Exception:
+            pass

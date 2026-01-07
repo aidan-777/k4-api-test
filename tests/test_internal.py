@@ -3,56 +3,34 @@ import pytest
 from src.api_client import InternalAPIClient
 
 
+def _build_depth_payload() -> dict:
+    """创建默认的深度请求"""
+    return {
+        "symbol": "BTC/USDC",
+        "ask_price": [60100.0, 60200.0],
+        "ask_volume": [1.5, 1.0],
+        "bid_price": [60000.0, 59900.0],
+        "bid_volume": [2.0, 1.5],
+    }
+
+
 @pytest.mark.internal
 class TestInternalAPI:
     """内部接口测试类"""
 
-    def test_add_mock_position_success(self, internal_api_client: InternalAPIClient):
-        """测试添加 mock 仓位 - 成功场景"""
-        # 先设置价格
-        internal_api_client.set_mock_md_price("BTC", 50000.0)
-        internal_api_client.set_mock_md_price("ETH", 3000.0)
-
-        # 添加仓位
-        response = internal_api_client.add_mock_position(
-            user_id="test_user_1",
-            position_id="test_pos_1",
-            borrowed_asset="USDC",
-            borrowed_amount=10000.0,
-            collateral_assets={"BTC": 0.5, "ETH": 5.0},
-        )
-        assert response.status_code == 200
+    def test_add_mock_position_not_implemented(self, internal_api_client: InternalAPIClient):
+        """当前实现返回 501"""
+        payload = {
+            "user_id": "test_user",
+            "position_id": "test_pos",
+            "borrowed_asset": "USDC",
+            "borrowed_amount": 1000.0,
+            "collateral_assets": {"BTC": 0.5},
+        }
+        response = internal_api_client.add_mock_position(payload)
+        assert response.status_code == 501
         data = response.json()
-        assert data["status"] == "success"
-        assert "data" in data
-        assert data["data"]["position_id"] == "test_pos_1"
-        assert data["data"]["user_id"] == "test_user_1"
-
-    def test_add_mock_position_empty_collateral(self, internal_api_client: InternalAPIClient):
-        """测试添加 mock 仓位 - 空抵押资产"""
-        response = internal_api_client.add_mock_position(
-            user_id="test_user",
-            position_id="test_pos",
-            borrowed_asset="USDC",
-            borrowed_amount=10000.0,
-            collateral_assets={},
-        )
-        assert response.status_code in [400, 500]
-        data = response.json()
-        assert "error" in data or data.get("status") == "error"
-
-    def test_add_mock_position_no_price(self, internal_api_client: InternalAPIClient):
-        """测试添加 mock 仓位 - 缺少价格数据"""
-        # 不设置价格，直接添加仓位
-        response = internal_api_client.add_mock_position(
-            user_id="test_user",
-            position_id="test_pos",
-            borrowed_asset="USDC",
-            borrowed_amount=10000.0,
-            collateral_assets={"BTC": 0.5},
-        )
-        # 应该返回错误，因为缺少价格
-        assert response.status_code in [400, 500]
+        assert data["message"] == "Not implemented"
 
     def test_set_mock_md_price_success(self, internal_api_client: InternalAPIClient):
         """测试设置 mock 价格 - 成功场景"""
@@ -66,16 +44,14 @@ class TestInternalAPI:
     def test_set_mock_md_price_invalid(self, internal_api_client: InternalAPIClient):
         """测试设置 mock 价格 - 无效价格"""
         response = internal_api_client.set_mock_md_price("BTC", -100.0)
-        assert response.status_code in [200, 400, 500]
+        assert response.status_code == 400
         data = response.json()
-        assert data.get("status") == "error" or "error" in data
+        assert data["status"] == "error"
+        assert data["error"] == "invalid_price"
 
     def test_clear_mock_md_price_success(self, internal_api_client: InternalAPIClient):
         """测试清除 mock 价格 - 成功场景"""
-        # 先设置价格
         internal_api_client.set_mock_md_price("BTC", 50000.0)
-
-        # 清除价格
         response = internal_api_client.clear_mock_md_price("BTC")
         assert response.status_code == 200
         data = response.json()
@@ -84,13 +60,43 @@ class TestInternalAPI:
 
     def test_clear_all_mock_md_prices(self, internal_api_client: InternalAPIClient):
         """测试清除所有 mock 价格"""
-        # 先设置一些价格
         internal_api_client.set_mock_md_price("BTC", 50000.0)
-        internal_api_client.set_mock_md_price("ETH", 3000.0)
-
-        # 清除所有价格
         response = internal_api_client.clear_all_mock_md_prices()
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "success"
 
+    def test_set_mock_md_depth_success(self, internal_api_client: InternalAPIClient):
+        """设置深度成功"""
+        payload = _build_depth_payload()
+        response = internal_api_client.set_mock_md_depth(payload)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+        assert data["symbol"] == payload["symbol"]
+
+    def test_set_mock_md_depth_invalid_spread(self, internal_api_client: InternalAPIClient):
+        """买价大于等于卖价时返回错误"""
+        payload = _build_depth_payload()
+        payload["bid_price"][0] = 70000.0
+        response = internal_api_client.set_mock_md_depth(payload)
+        assert response.status_code == 400
+        data = response.json()
+        assert data["status"] == "error"
+        assert data["error"] in ("invalid_spread", "invalid_depth")
+
+    def test_clear_mock_md_depth_success(self, internal_api_client: InternalAPIClient):
+        """清除指定交易对深度"""
+        internal_api_client.set_mock_md_depth(_build_depth_payload())
+        response = internal_api_client.clear_mock_md_depth({"symbol": "BTC/USDC"})
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
+
+    def test_clear_all_mock_md_depths(self, internal_api_client: InternalAPIClient):
+        """清除全部深度"""
+        internal_api_client.set_mock_md_depth(_build_depth_payload())
+        response = internal_api_client.clear_all_mock_md_depths()
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "success"
