@@ -3,14 +3,20 @@
 
 set -e
 
-# 检查虚拟环境
-if [ ! -d "venv" ]; then
-    echo "创建虚拟环境..."
-    python3 -m venv venv
+# 优先使用 conda 环境（如果已激活），否则使用 venv
+if [ -n "${CONDA_PREFIX:-}" ]; then
+    echo "检测到 conda 环境: ${CONDA_DEFAULT_ENV:-unknown} (${CONDA_PREFIX})"
+elif [ -n "${VIRTUAL_ENV:-}" ]; then
+    echo "检测到虚拟环境: ${VIRTUAL_ENV}"
+else
+    if [ ! -d ".venv" ]; then
+        echo "创建虚拟环境 (.venv)..."
+        python3 -m venv .venv
+    fi
+    # 激活虚拟环境
+    # shellcheck disable=SC1091
+    source .venv/bin/activate
 fi
-
-# 激活虚拟环境
-source venv/bin/activate
 
 # 安装依赖
 echo "安装依赖..."
@@ -31,4 +37,3 @@ mkdir -p reports
 # 运行测试
 echo "运行测试..."
 pytest "$@"
-

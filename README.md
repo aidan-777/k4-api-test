@@ -47,7 +47,19 @@ pip install -r requirements.txt
 
 ### 2. 配置环境变量
 
-复制 `env.example` 为 `.env` 并修改配置：
+推荐使用配置文件（更省事，不需要导出环境变量）：
+
+```bash
+cp config.example.json config.local.json
+```
+
+编辑 `config.local.json` 填入：
+- `public_api_base_url` / `internal_api_base_url`
+- 可选：`wallet.address` / `wallet.clean_address` / `wallet.user_id` / `wallet.authorization`
+- `enable_internal`（是否跑 8081 internal 测试）
+- `run_real_tx`（是否允许运行会产生真实副作用的测试）
+
+兼容旧方式：也可复制 `env.example` 为 `.env` 并修改配置：
 
 ```bash
 cp env.example .env
@@ -220,4 +232,3 @@ echo $?
 ## 许可证
 
 与主项目保持一致。
-

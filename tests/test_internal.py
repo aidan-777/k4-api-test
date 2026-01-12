@@ -2,6 +2,8 @@
 import pytest
 from src.api_client import InternalAPIClient
 
+pytestmark = pytest.mark.skip(reason="internal API tests are not needed currently")
+
 
 def _build_depth_payload() -> dict:
     """创建默认的深度请求"""

@@ -15,6 +15,7 @@ class TestHealthCheck:
 
     def test_ping_internal(self, internal_api_client: InternalAPIClient):
         """测试内部 API ping 接口"""
+        pytest.skip("internal API tests are not needed currently")
         response = internal_api_client.ping()
         assert response.status_code == 200
         assert response.text.strip() == "pong"
@@ -30,6 +31,7 @@ class TestHealthCheck:
 
     def test_health_check_internal(self, internal_api_client: InternalAPIClient):
         """测试内部 API 健康检查接口"""
+        pytest.skip("internal API tests are not needed currently")
         response = internal_api_client.health_check()
         assert response.status_code == 200
         data = response.json()

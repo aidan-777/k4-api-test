@@ -1,0 +1,84 @@
+test_name: public ping
+
+stages:
+  - name: GET /ping
+    request:
+      url: "{public_api_base_url}/ping"
+      method: GET
+    response:
+      status_code: 200
+      body: "pong"
+
+---
+
+test_name: public health check
+
+stages:
+  - name: GET /hc
+    request:
+      url: "{public_api_base_url}/hc"
+      method: GET
+    response:
+      status_code: 200
+      strict: false
+      json:
+        status: healthy
+        service: superstack-cross-margin
+        timestamp: !anything
+
+---
+
+test_name: public status
+
+stages:
+  - name: GET /api/v1/status
+    request:
+      url: "{public_api_base_url}/api/v1/status"
+      method: GET
+    response:
+      status_code: 200
+      strict: false
+      json:
+        status: running
+        metrics_port: 9091
+        http_port: 8080
+        version: !anything
+        components:
+          metrics_server: running
+          http_server: running
+
+---
+
+test_name: metrics endpoint redirects
+
+stages:
+  - name: GET /api/v1/metrics (no redirects)
+    request:
+      url: "{public_api_base_url}/api/v1/metrics"
+      method: GET
+      follow_redirects: false
+    response:
+      status_code: [301, 308]
+      headers:
+        Location: !re_match ".*9091/metrics$"
+
+---
+
+test_name: general info includes BTC
+
+stages:
+  - name: GET /api/v1/general_info
+    request:
+      url: "{public_api_base_url}/api/v1/general_info"
+      method: GET
+    response:
+      status_code: 200
+      strict: false
+      json:
+        interest_rate_hourly: !anything
+        interest_rate_annual: !anything
+        assets:
+          BTC:
+            liquidation_threshold: !anything
+            price: !anything
+

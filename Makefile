@@ -1,9 +1,10 @@
-.PHONY: install test test-health test-loan test-redeem test-position test-margin test-internal test-report clean help
+.PHONY: install test test-tavern test-health test-loan test-redeem test-position test-margin test-internal test-report clean help
 
 help:
 	@echo "可用的命令:"
 	@echo "  make install      - 安装依赖"
 	@echo "  make test         - 运行所有测试"
+	@echo "  make test-tavern  - 运行 Tavern YAML 测试"
 	@echo "  make test-health  - 运行健康检查测试"
 	@echo "  make test-loan    - 运行借款相关测试"
 	@echo "  make test-redeem  - 运行赎回相关测试"
@@ -18,6 +19,9 @@ install:
 
 test:
 	pytest
+
+test-tavern:
+	pytest tavern
 
 test-health:
 	pytest -m health
@@ -45,4 +49,3 @@ clean:
 	rm -rf __pycache__ .pytest_cache htmlcov .coverage reports
 	find . -type d -name __pycache__ -exec rm -r {} +
 	find . -type f -name "*.pyc" -delete
-

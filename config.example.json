@@ -1,0 +1,14 @@
+{
+  "public_api_base_url": "http://20.243.213.42:8080",
+  "internal_api_base_url": "http://20.243.213.42:8081",
+  "wallet": {
+    "address": "0x0000000000000000000000000000000000000000",
+    "user_id": "00000000-0000-0000-0000-000000000000",
+    "authorization": "Bearer <token>",
+    "spot_btc_asset": 10142,
+    "spot_buy_size": "0.0001",
+    "spot_buy_price": "1",
+    "usdc_only_address": "",
+    "multi_collateral_address": ""
+  }
+}

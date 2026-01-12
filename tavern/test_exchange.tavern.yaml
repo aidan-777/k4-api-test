@@ -1,0 +1,14 @@
+test_name: exchange requires wallet address
+
+stages:
+  - name: POST /api/v1/exchange missing walletAddress
+    request:
+      url: "{public_api_base_url}/api/v1/exchange"
+      method: POST
+      json:
+        action:
+          type: cancel
+          cancels: []
+    response:
+      status_code: [400, 422]
+

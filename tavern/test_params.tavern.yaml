@@ -1,0 +1,15 @@
+test_name: do_param_update returns placeholder
+
+stages:
+  - name: POST /api/v1/do_param_update
+    request:
+      url: "{public_api_base_url}/api/v1/do_param_update"
+      method: POST
+      json:
+        foo: bar
+    response:
+      status_code: 200
+      strict: false
+      json:
+        message: unimplemented
+

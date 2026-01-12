@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+from src.test_config import load_test_config
+
 
 class APIClient:
     """API 客户端，封装 HTTP 请求"""
@@ -22,7 +24,8 @@ class APIClient:
             base_url: API 基础 URL，默认从环境变量读取
             timeout: 请求超时时间（秒）
         """
-        self.base_url = base_url or os.getenv("PUBLIC_API_BASE_URL", "http://localhost:8080")
+        cfg = load_test_config()
+        self.base_url = base_url or cfg.public_api_base_url or os.getenv("PUBLIC_API_BASE_URL", "http://localhost:8080")
         self.timeout = timeout
         self.session = requests.Session()
         self.session.headers.update({
@@ -55,7 +58,8 @@ class PublicAPIClient(APIClient):
     """公共 API 客户端"""
 
     def __init__(self, base_url: Optional[str] = None, timeout: int = 30):
-        base_url = base_url or os.getenv("PUBLIC_API_BASE_URL", "http://localhost:8080")
+        cfg = load_test_config()
+        base_url = base_url or cfg.public_api_base_url or os.getenv("PUBLIC_API_BASE_URL", "http://localhost:8080")
         super().__init__(base_url, timeout)
 
     def ping(self) -> requests.Response:
@@ -96,10 +100,14 @@ class PublicAPIClient(APIClient):
         headers: Optional[Dict[str, str]] = None,
     ) -> requests.Response:
         """执行借款"""
+        # 当前服务版本中 user_id 由 body 传入（LoanExecutionRequest.user_id）。
+        # 兼容旧调用方式：若传入 user_id 且 payload 中未包含，则自动注入。
+        merged_payload = dict(payload) if payload else {}
+        if user_id and "user_id" not in merged_payload:
+            merged_payload["user_id"] = user_id
+
         merged_headers = dict(headers) if headers else {}
-        if user_id:
-            merged_headers["X-User-Id"] = user_id
-        return self.post("/api/v1/do_loan", json=payload, headers=merged_headers or None)
+        return self.post("/api/v1/do_loan", json=merged_payload, headers=merged_headers or None)
 
     def repay_quote(self, payload: Dict[str, Any]) -> requests.Response:
         """获取还款报价"""
@@ -144,12 +152,39 @@ class PublicAPIClient(APIClient):
         """查询利息历史"""
         return self.post("/api/v1/interest_history", json=payload)
 
+    # --- Optional/experimental endpoints (may not exist in all deployments) ---
+
+    def add_margin(
+        self,
+        payload: Dict[str, Any],
+        user_id: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> requests.Response:
+        """增加/减少保证金（若服务支持）"""
+        merged_headers = dict(headers) if headers else {}
+        if user_id:
+            merged_headers["X-User-Id"] = user_id
+        return self.post("/api/v1/add_margin", json=payload, headers=merged_headers or None)
+
+    def user_close_position(
+        self,
+        payload: Dict[str, Any],
+        user_id: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> requests.Response:
+        """用户平仓（若服务支持）"""
+        merged_headers = dict(headers) if headers else {}
+        if user_id:
+            merged_headers["X-User-Id"] = user_id
+        return self.post("/api/v1/user_close_position", json=payload, headers=merged_headers or None)
+
 
 class InternalAPIClient(APIClient):
     """内部 API 客户端"""
 
     def __init__(self, base_url: Optional[str] = None, timeout: int = 30):
-        base_url = base_url or os.getenv("INTERNAL_API_BASE_URL", "http://localhost:8081")
+        cfg = load_test_config()
+        base_url = base_url or cfg.internal_api_base_url or os.getenv("INTERNAL_API_BASE_URL", "http://localhost:8081")
         super().__init__(base_url, timeout)
 
     def ping(self) -> requests.Response:

@@ -1,0 +1,12 @@
+variables:
+  # Base URL: prefer config.local.json -> env var fallback (set by conftest.py at import time)
+  public_api_base_url: "{tavern.env_vars.PUBLIC_API_BASE_URL}"
+
+  # Optional real wallet values (may be empty)
+  cm_wallet_address: "{tavern.env_vars.CM_WALLET_ADDRESS}"
+  cm_user_id: "{tavern.env_vars.CM_USER_ID}"
+  cm_authorization: "{tavern.env_vars.CM_AUTHORIZATION}"
+  cm_spot_btc_asset: "{tavern.env_vars.CM_SPOT_BTC_ASSET}"
+  cm_spot_buy_size: "{tavern.env_vars.CM_SPOT_BUY_SIZE}"
+  cm_spot_buy_price: "{tavern.env_vars.CM_SPOT_BUY_PRICE}"
+

@@ -1,0 +1,60 @@
+test_name: repay_quote validation error without address
+
+stages:
+  - name: POST /api/v1/repay_quote missing address
+    request:
+      url: "{public_api_base_url}/api/v1/repay_quote"
+      method: POST
+      json: {}
+    response:
+      status_code: 422
+
+---
+
+test_name: repay_quote empty address rejected
+
+stages:
+  - name: POST /api/v1/repay_quote empty address
+    request:
+      url: "{public_api_base_url}/api/v1/repay_quote"
+      method: POST
+      json:
+        address: ""
+    response:
+      status_code: 400
+      strict: false
+      json:
+        status: error
+        message: "Invalid address: cannot be empty"
+
+---
+
+test_name: do_repay validation error without address
+
+stages:
+  - name: POST /api/v1/do_repay missing address
+    request:
+      url: "{public_api_base_url}/api/v1/do_repay"
+      method: POST
+      json: {}
+    response:
+      status_code: 422
+
+---
+
+test_name: do_repay empty address rejected
+
+stages:
+  - name: POST /api/v1/do_repay empty address
+    request:
+      url: "{public_api_base_url}/api/v1/do_repay"
+      method: POST
+      json:
+        address: ""
+    response:
+      status_code: 400
+      strict: false
+      json:
+        status: error
+        message: "Invalid address: cannot be empty"
+

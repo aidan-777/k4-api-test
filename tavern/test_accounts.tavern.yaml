@@ -1,0 +1,79 @@
+test_name: get_accounts returns snapshot shape
+
+stages:
+  - name: POST /api/v1/get_accounts
+    request:
+      url: "{public_api_base_url}/api/v1/get_accounts"
+      method: POST
+    response:
+      status_code: 200
+      strict: false
+      json:
+        success: true
+        count: !anything
+        accounts: !anything
+
+---
+
+test_name: get_account_by_ids empty list
+
+stages:
+  - name: POST /api/v1/get_account_by_ids
+    request:
+      url: "{public_api_base_url}/api/v1/get_account_by_ids"
+      method: POST
+      json:
+        account_ids: []
+    response:
+      status_code: 200
+      strict: false
+      json:
+        success: true
+        total_requested: 0
+        total_found: 0
+
+---
+
+test_name: get_assets_by_ids empty list
+
+stages:
+  - name: POST /api/v1/get_assets_by_ids
+    request:
+      url: "{public_api_base_url}/api/v1/get_assets_by_ids"
+      method: POST
+      json:
+        account_ids: []
+    response:
+      status_code: 200
+      strict: false
+      json:
+        success: true
+        total_requested: 0
+        total_found: 0
+
+---
+
+test_name: operation_history validation error without address
+
+stages:
+  - name: POST /api/v1/operation_history
+    request:
+      url: "{public_api_base_url}/api/v1/operation_history"
+      method: POST
+      json: {}
+    response:
+      status_code: 422
+
+---
+
+test_name: interest_history validation error without address
+
+stages:
+  - name: POST /api/v1/interest_history
+    request:
+      url: "{public_api_base_url}/api/v1/interest_history"
+      method: POST
+      json: {}
+    response:
+      status_code: 422
+

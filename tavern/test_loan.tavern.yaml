@@ -1,0 +1,24 @@
+test_name: loan_quote validation error without address
+
+stages:
+  - name: POST /api/v1/loan_quote missing address
+    request:
+      url: "{public_api_base_url}/api/v1/loan_quote"
+      method: POST
+      json: {}
+    response:
+      status_code: 422
+
+---
+
+test_name: do_loan validation error with empty payload
+
+stages:
+  - name: POST /api/v1/do_loan empty
+    request:
+      url: "{public_api_base_url}/api/v1/do_loan"
+      method: POST
+      json: {}
+    response:
+      status_code: 422
+
