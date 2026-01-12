@@ -1,0 +1,19 @@
+venv/
+.venv/
+.env
+.pytest_cache/
+__pycache__/
+.pycache/
+*.pyc
+.coverage
+htmlcov/
+
+# Allure
+reports/allure-results/
+reports/allure-report/
+reports/report.html
+reports/*.html
+
+# Local config (do not commit secrets)
+config.local.json
+config.json
